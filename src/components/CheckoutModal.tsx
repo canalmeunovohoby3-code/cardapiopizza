@@ -24,6 +24,13 @@ interface CheckoutModalProps {
   onClose: () => void;
 }
 
+type Step = "identify" | "form";
+
+interface LookupFeedback {
+  message: string;
+  tone: "found" | "new" | "error";
+}
+
 const paymentOptions: Array<{ id: PaymentMethod; label: string; emoji: string }> = [
   { id: "dinheiro", label: "Dinheiro", emoji: "💵" },
   { id: "pix", label: "Pix", emoji: "⚡" },
@@ -82,7 +89,8 @@ export function CheckoutModal({ onClose }: CheckoutModalProps) {
   const [sentUrl, setSentUrl] = useState<string | null>(null);
   const [cepLoading, setCepLoading] = useState(false);
   const [lookupBusy, setLookupBusy] = useState(false);
-  const [lookupMessage, setLookupMessage] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<LookupFeedback | null>(null);
+  const [step, setStep] = useState<Step>(isSupabaseConfigured ? "identify" : "form");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   function setField<K extends keyof CheckoutCustomer>(
@@ -97,29 +105,51 @@ export function CheckoutModal({ onClose }: CheckoutModalProps) {
     event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) {
     const { name, value } = event.target;
-    if (name === "whatsapp") setLookupMessage(null);
     setField(name as keyof CheckoutCustomer, value);
   }
 
-  async function handleLookup() {
-    if (!isSupabaseConfigured) return;
+  async function handleLookup(event?: FormEvent<HTMLFormElement>) {
+    event?.preventDefault();
     const digits = customer.whatsapp.replace(/\D/g, "");
     if (digits.length < 10) {
-      setLookupMessage("Informe um WhatsApp válido com DDD para buscar.");
+      setErrors((prev) => ({
+        ...prev,
+        whatsapp: "Informe um WhatsApp válido com DDD.",
+      }));
       return;
     }
+
+    setErrors((prev) => ({ ...prev, whatsapp: undefined }));
     setLookupBusy(true);
-    setLookupMessage("Buscando cadastro...");
+    setFeedback(null);
+
+    if (!isSupabaseConfigured) {
+      setStep("form");
+      setLookupBusy(false);
+      return;
+    }
+
     try {
       const found = await findCustomerByPhone(customer.whatsapp);
       if (found) {
         setCustomer((prev) => profileToCustomer(found, prev));
-        setLookupMessage("Cadastro encontrado! Dados preenchidos automaticamente.");
+        setFeedback({
+          message: "Cadastro encontrado! Seus dados foram preenchidos automaticamente.",
+          tone: "found",
+        });
       } else {
-        setLookupMessage("Novo cadastro — preencha seus dados que salvamos para a próxima.");
+        setFeedback({
+          message: "Novo cadastro — confira e complete seus dados.",
+          tone: "new",
+        });
       }
+      setStep("form");
     } catch {
-      setLookupMessage("Não foi possível buscar agora. Preencha normalmente.");
+      setFeedback({
+        message: "Não foi possível buscar agora. Preencha seus dados normalmente.",
+        tone: "error",
+      });
+      setStep("form");
     } finally {
       setLookupBusy(false);
     }
@@ -172,15 +202,91 @@ export function CheckoutModal({ onClose }: CheckoutModalProps) {
       }
     }
 
+    // 1) Monta a mensagem com o carrinho ainda cheio.
     const message = buildOrderMessage({ items, gifts, summary, customer });
     const url = buildWhatsAppUrl(WHATSAPP_NUMBER, message);
     saveCustomer(customer);
+    // 2) Abre o WhatsApp...
     openWhatsApp(WHATSAPP_NUMBER, message);
+    // 3) ...e só então limpa o carrinho (estado + localStorage).
+    clearCart();
     setSentUrl(url);
     setSent(true);
   }
 
   const hasErrors = Object.values(errors).some(Boolean);
+
+  const header = (
+    <header className="flex items-start justify-between gap-3 border-b border-line bg-white px-4 py-3.5">
+      <div>
+        <h2 className="font-display text-lg font-extrabold text-ink">
+          Finalizar pedido
+        </h2>
+        <p className="text-xs text-ink-soft">
+          {step === "identify"
+            ? "Informe seu WhatsApp para preencher seus dados automaticamente."
+            : `${pizzeria.delivery.headline} Taxa de ${formatBRL(pizzeria.delivery.fee)}.`}
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label="Fechar"
+        className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-cream-2 text-ink-soft transition active:scale-95"
+      >
+        <CloseIcon className="h-5 w-5" />
+      </button>
+    </header>
+  );
+
+  const summaryBlock = (
+    <div className="rounded-2xl border border-line bg-white p-3.5">
+      <p className="font-display text-sm font-bold text-ink">Resumo do pedido</p>
+      <dl className="mt-2 space-y-1 text-sm">
+        <div className="flex justify-between">
+          <dt className="text-ink-soft">
+            Subtotal ({itemCount} {itemCount === 1 ? "item" : "itens"})
+          </dt>
+          <dd className="font-semibold text-ink">{formatBRL(summary.subtotal)}</dd>
+        </div>
+        {gifts.map((gift) => (
+          <div key={gift.id} className="flex justify-between">
+            <dt className="text-ink-soft">
+              🎁 {gift.quantity > 1 ? `${gift.quantity}x ` : ""}
+              {gift.name}
+            </dt>
+            <dd className="font-semibold text-brand-green">GRÁTIS</dd>
+          </div>
+        ))}
+        <div className="flex justify-between">
+          <dt className="text-ink-soft">Taxa de entrega</dt>
+          <dd className="font-semibold text-ink">{formatBRL(summary.deliveryFee)}</dd>
+        </div>
+        <div className="flex justify-between border-t border-line pt-2">
+          <dt className="font-display font-bold text-ink">Total</dt>
+          <dd className="font-display text-lg font-extrabold text-brand-green">
+            {formatBRL(summary.total)}
+          </dd>
+        </div>
+      </dl>
+    </div>
+  );
+
+  const feedbackBlock = feedback ? (
+    <p
+      role="status"
+      className={cn(
+        "rounded-2xl px-3.5 py-2.5 text-xs font-semibold",
+        feedback.tone === "found"
+          ? "bg-brand-green-soft text-brand-green"
+          : feedback.tone === "error"
+            ? "bg-brand-red-soft text-brand-red-dark"
+            : "bg-brand-yellow-soft text-ink",
+      )}
+    >
+      {feedback.message}
+    </p>
+  ) : null;
 
   return (
     <Modal
@@ -214,36 +320,46 @@ export function CheckoutModal({ onClose }: CheckoutModalProps) {
           ) : null}
           <button
             type="button"
-            onClick={() => {
-              clearCart();
-              onClose();
-            }}
+            onClick={onClose}
             className="h-11 w-full rounded-full border border-line font-display text-sm font-bold text-ink transition active:scale-[0.98]"
           >
             Fazer novo pedido
           </button>
         </div>
+      ) : step === "identify" ? (
+        <form onSubmit={handleLookup} className="flex min-h-0 flex-1 flex-col">
+          {header}
+          <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
+            <TextField
+              id="whatsapp"
+              label="WhatsApp"
+              value={customer.whatsapp}
+              onChange={handleChange}
+              error={errors.whatsapp}
+              required
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              placeholder="(45) 99999-9999"
+            />
+            <button
+              type="submit"
+              disabled={lookupBusy}
+              className="h-12 w-full rounded-full bg-brand-green font-display text-base font-bold text-white transition active:scale-[0.98] disabled:opacity-60"
+            >
+              {lookupBusy ? "Buscando..." : "Buscar"}
+            </button>
+            <p className="text-center text-[11px] text-ink-soft">
+              Se já pediu aqui, seus dados aparecem automaticamente. Se for a primeira
+              vez, é só completar o cadastro.
+            </p>
+            {feedbackBlock}
+            {summaryBlock}
+          </div>
+        </form>
       ) : (
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-          <header className="flex items-start justify-between gap-3 border-b border-line bg-white px-4 py-3.5">
-            <div>
-              <h2 className="font-display text-lg font-extrabold text-ink">
-                Finalizar pedido
-              </h2>
-              <p className="text-xs text-ink-soft">
-                {pizzeria.delivery.headline} Taxa de {formatBRL(pizzeria.delivery.fee)}.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Fechar"
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-cream-2 text-ink-soft transition active:scale-95"
-            >
-              <CloseIcon className="h-5 w-5" />
-            </button>
-          </header>
-
+          {header}
           <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
             {hasErrors ? (
               <p
@@ -254,6 +370,8 @@ export function CheckoutModal({ onClose }: CheckoutModalProps) {
               </p>
             ) : null}
 
+            {feedbackBlock ? <div className="mb-3">{feedbackBlock}</div> : null}
+
             <div className="space-y-3">
               <div className="grid grid-cols-[1fr_auto] items-start gap-2">
                 <TextField
@@ -261,23 +379,23 @@ export function CheckoutModal({ onClose }: CheckoutModalProps) {
                   label="WhatsApp"
                   value={customer.whatsapp}
                   onChange={handleChange}
-                  onBlur={() => void handleLookup()}
                   error={errors.whatsapp}
                   required
                   type="tel"
                   inputMode="tel"
                   autoComplete="tel"
                   placeholder="(45) 99999-9999"
-                  hint={lookupMessage ?? undefined}
                 />
                 {isSupabaseConfigured ? (
                   <button
                     type="button"
-                    onClick={handleLookup}
-                    disabled={lookupBusy}
-                    className="mt-5 h-11 shrink-0 rounded-2xl border border-brand-green/40 bg-white px-3 text-xs font-bold text-brand-green transition active:scale-95 disabled:opacity-60"
+                    onClick={() => {
+                      setFeedback(null);
+                      setStep("identify");
+                    }}
+                    className="mt-5 h-11 shrink-0 rounded-2xl border border-brand-green/40 bg-white px-3 text-xs font-bold text-brand-green transition active:scale-95"
                   >
-                    {lookupBusy ? "..." : "Buscar"}
+                    Trocar
                   </button>
                 ) : null}
               </div>
@@ -414,40 +532,7 @@ export function CheckoutModal({ onClose }: CheckoutModalProps) {
               />
             </div>
 
-            <div className="mt-4 rounded-2xl border border-line bg-white p-3.5">
-              <p className="font-display text-sm font-bold text-ink">
-                Resumo do pedido
-              </p>
-              <dl className="mt-2 space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <dt className="text-ink-soft">
-                    Subtotal ({itemCount} {itemCount === 1 ? "item" : "itens"})
-                  </dt>
-                  <dd className="font-semibold text-ink">{formatBRL(summary.subtotal)}</dd>
-                </div>
-                {gifts.map((gift) => (
-                  <div key={gift.id} className="flex justify-between">
-                    <dt className="text-ink-soft">
-                      🎁 {gift.quantity > 1 ? `${gift.quantity}x ` : ""}
-                      {gift.name}
-                    </dt>
-                    <dd className="font-semibold text-brand-green">GRÁTIS</dd>
-                  </div>
-                ))}
-                <div className="flex justify-between">
-                  <dt className="text-ink-soft">Taxa de entrega</dt>
-                  <dd className="font-semibold text-ink">
-                    {formatBRL(summary.deliveryFee)}
-                  </dd>
-                </div>
-                <div className="flex justify-between border-t border-line pt-2">
-                  <dt className="font-display font-bold text-ink">Total</dt>
-                  <dd className="font-display text-lg font-extrabold text-brand-green">
-                    {formatBRL(summary.total)}
-                  </dd>
-                </div>
-              </dl>
-            </div>
+            <div className="mt-4">{summaryBlock}</div>
           </div>
 
           <footer className="border-t border-line bg-white px-4 pt-3 pb-safe">

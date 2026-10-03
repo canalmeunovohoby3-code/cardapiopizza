@@ -81,6 +81,11 @@ export const drinkImages: Record<string, GeneratedImage> = {
     "width": 447,
     "height": 447
   },
+  "coca-lata": {
+    "src": "/images/products/drinks/drink-coca-lata-4e8452bd.webp",
+    "width": 603,
+    "height": 603
+  },
   "coca-zero-2l": {
     "src": "/images/products/drinks/drink-coca-zero-2l-7164535f.webp",
     "width": 1200,
@@ -90,5 +95,25 @@ export const drinkImages: Record<string, GeneratedImage> = {
     "src": "/images/products/drinks/drink-fanta-2l-0d864878.webp",
     "width": 1200,
     "height": 1200
+  },
+  "fanta-lata": {
+    "src": "/images/products/drinks/drink-fanta-lata-6df86df3.webp",
+    "width": 603,
+    "height": 603
+  },
+  "guarana-2l": {
+    "src": "/images/products/drinks/drink-guarana-2l-7f4e87eb.webp",
+    "width": 603,
+    "height": 603
+  },
+  "guarana-lata": {
+    "src": "/images/products/drinks/drink-guarana-lata-39a01392.webp",
+    "width": 800,
+    "height": 800
+  },
+  "pepsi-lata": {
+    "src": "/images/products/drinks/drink-pepsi-lata-4f70ce8a.webp",
+    "width": 603,
+    "height": 603
   }
 };

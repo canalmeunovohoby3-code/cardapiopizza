@@ -29,15 +29,14 @@ export const pizzeria = {
  * =====================================================================
  * WHATSAPP DA PIZZARIA
  * ---------------------------------------------------------------------
- * IMPORTANTE: o número NÃO foi inventado. Substitua abaixo pelo número
- * real, no formato internacional (código do país + DDD + número), apenas
- * com dígitos. Ex.: 55 45 99999-9999  ->  "5545999999999".
+ * Número no formato internacional (país + DDD + número), apenas dígitos.
+ * (45) 99856-3187  ->  "5545998563187".
  *
- * Você também pode definir a variável de ambiente:
- *   NEXT_PUBLIC_WHATSAPP_NUMBER=5545999999999
+ * Pode ser sobrescrito pela variável de ambiente:
+ *   NEXT_PUBLIC_WHATSAPP_NUMBER=5545998563187
  * (na Vercel: Settings -> Environment Variables)
  * =====================================================================
  */
 export const WHATSAPP_NUMBER = (
-  process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "5500000000000"
+  process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "5545998563187"
 ).replace(/\D/g, "");
