@@ -9,8 +9,8 @@
  */
 
 export const pizzeria = {
-  /** Troque pelo nome real da pizzaria. */
-  name: "Forno & Brasa",
+  /** Nome exibido em textos/metadata (a logomarca está em /images/logo.png). */
+  name: "Felipe's Pizzaria",
   /** Frase curta exibida no topo, convidando o cliente a pedir. */
   tagline: "A pizza quentinha que chega direto na sua porta.",
   address: {

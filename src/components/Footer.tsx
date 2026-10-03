@@ -1,4 +1,5 @@
-import { LogoMark } from "@/components/Logo";
+import Image from "next/image";
+
 import { WhatsAppIcon } from "@/components/Icons";
 import { pizzeria, WHATSAPP_NUMBER } from "@/data/config";
 import { formatBRL } from "@/lib/format";
@@ -8,13 +9,17 @@ export function Footer({ reserveCartSpace = false }: { reserveCartSpace?: boolea
     <footer className="mt-12 bg-ink px-4 py-10 text-white/85">
       <div className="mx-auto max-w-5xl">
         <div className="flex items-center gap-3">
-          <LogoMark className="h-11 w-11 rounded-2xl" />
-          <div>
-            <p className="font-display text-lg font-extrabold text-white">
-              {pizzeria.name}
-            </p>
-            <p className="text-xs text-white/70">Cardápio digital • pedidos pelo WhatsApp</p>
-          </div>
+          <Image
+            src="/images/logo.png"
+            alt={pizzeria.name}
+            width={835}
+            height={699}
+            sizes="160px"
+            className="h-16 w-auto"
+          />
+          <p className="text-xs text-white/70">
+            Cardápio digital • pedidos pelo WhatsApp
+          </p>
         </div>
 
         <div className="mt-6 grid gap-5 text-sm sm:grid-cols-2">
