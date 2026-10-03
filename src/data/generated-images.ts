@@ -82,8 +82,8 @@ export const drinkImages: Record<string, GeneratedImage> = {
     "height": 447
   },
   "coca-zero-2l": {
-    "src": "/images/products/drinks/drink-coca-zero-2l-d2a5fd24.webp",
-    "width": 1000,
-    "height": 1000
+    "src": "/images/products/drinks/drink-coca-zero-2l-7164535f.webp",
+    "width": 1200,
+    "height": 1200
   }
 };
