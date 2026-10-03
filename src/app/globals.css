@@ -1,26 +1,218 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* =====================================================================
+   IDENTIDADE VISUAL — PIZZARIA
+   Amarelo #FAB230 · Verde #027C3A · Vermelho #F01922
+   ===================================================================== */
+@theme {
+  --color-cream: #fff9f0;
+  --color-cream-2: #fdf1e0;
+  --color-cream-3: #f8e7d0;
+  --color-ink: #2b211b;
+  --color-ink-soft: #6f5c4e;
+  --color-line: #eeddc6;
+
+  --color-brand-yellow: #fab230;
+  --color-brand-yellow-dark: #e09a12;
+  --color-brand-yellow-soft: #fff1d4;
+  --color-brand-green: #027c3a;
+  --color-brand-green-dark: #01602d;
+  --color-brand-green-soft: #e2f3e8;
+  --color-brand-red: #f01922;
+  --color-brand-red-dark: #c81219;
+  --color-brand-red-soft: #fde3e4;
+
+  --radius-2xl: 1.15rem;
+  --radius-3xl: 1.5rem;
+
+  --shadow-card: 0 1px 2px rgba(43, 33, 27, 0.05), 0 8px 24px -16px rgba(43, 33, 27, 0.35);
+  --shadow-float: 0 10px 30px -10px rgba(43, 33, 27, 0.45);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-baloo), var(--font-inter), ui-sans-serif, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-cream);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand-green);
+    outline-offset: 2px;
+    border-radius: 4px;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ------------------------- animações leves ------------------------- */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.22);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-5px);
+  }
+  40% {
+    transform: translateX(5px);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(3px);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.anim-fade-up {
+  animation: fade-up 0.4s ease-out both;
+}
+.anim-fade-in {
+  animation: fade-in 0.2s ease-out both;
+}
+.anim-sheet-up {
+  animation: sheet-up 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.anim-scale-in {
+  animation: scale-in 0.2s ease-out both;
+}
+.anim-pop {
+  animation: pop 0.3s ease-out;
+}
+.anim-shake {
+  animation: shake 0.4s ease-out;
+}
+.anim-slide-in-right {
+  animation: slide-in-right 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.anim-rise-in {
+  animation: rise-in 0.25s ease-out both;
+}
+
+/* Folha inferior no celular, janela/drawer no desktop. */
+.modal-panel {
+  animation: sheet-up 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.drawer-panel {
+  animation: sheet-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (min-width: 640px) {
+  .modal-panel {
+    animation: scale-in 0.2s ease-out both;
+  }
+  .drawer-panel {
+    animation: slide-in-right 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+/* ----------------------------- utilitários ----------------------------- */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.pb-safe {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+.hide-scroll-x {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }
