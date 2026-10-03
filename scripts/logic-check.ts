@@ -1,3 +1,4 @@
+import { normalizePhone } from "@/lib/customers";
 import { formatBRL } from "@/lib/format";
 import { getOrderSummary, getPizzaUnitPrice } from "@/lib/pricing";
 import {
@@ -114,6 +115,15 @@ check("troco aparece no dinheiro", cashMessage.includes("*Troco para:* R$ 100,00
 const url = buildWhatsAppUrl("5545999999999", message);
 check("url wa.me correta", url.startsWith("https://wa.me/5545999999999?text="));
 check("url codificada", !url.includes("\n"));
+
+// 7) Normalização de telefone (mesmo valor em qualquer formato)
+const esperado = "5511999999999";
+check("normaliza (11) 99999-9999", normalizePhone("(11) 99999-9999") === esperado, normalizePhone("(11) 99999-9999"));
+check("normaliza 11999999999", normalizePhone("11999999999") === esperado, normalizePhone("11999999999"));
+check("normaliza +55 11 99999-9999", normalizePhone("+55 11 99999-9999") === esperado, normalizePhone("+55 11 99999-9999"));
+check("normaliza 5511999999999", normalizePhone("5511999999999") === esperado, normalizePhone("5511999999999"));
+check("normaliza 011 99999-9999", normalizePhone("011 99999-9999") === esperado, normalizePhone("011 99999-9999"));
+check("normaliza telefone da pizzaria", normalizePhone("(45) 99856-3187") === "5545998563187", normalizePhone("(45) 99856-3187"));
 
 console.log(`\n${failures === 0 ? "TODOS OS TESTES PASSARAM" : `${failures} TESTE(S) FALHARAM`}`);
 process.exit(failures === 0 ? 0 : 1);

@@ -130,7 +130,10 @@ NEXT_PUBLIC_SUPABASE_URL=https://omtvmmvwterkgdbdbikk.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=coloque_a_chave_anon_aqui
 ```
 
-Na **Vercel**, adicione as duas em *Settings → Environment Variables*.
+Na **Vercel**, adicione as duas em *Settings → Environment Variables* e faça um
+**novo deploy** (variáveis `NEXT_PUBLIC_*` são fixadas no momento do build —
+adicionar depois só vale após redeploy). Se o console do site mostrar
+`[supabase] ... ausentes neste build`, é sinal de que faltou configurar/redeployar.
 
 > Segurança: use **somente a chave `anon` (pública)** no frontend. Nunca coloque
 > a `service_role` no projeto.

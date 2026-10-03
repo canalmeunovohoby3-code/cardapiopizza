@@ -14,7 +14,6 @@ import {
   saveCustomerProfile,
 } from "@/lib/customers";
 import { formatBRL } from "@/lib/format";
-import { loadCustomer, saveCustomer } from "@/lib/cart-storage";
 import { paymentLabels } from "@/lib/order";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { buildOrderMessage, buildWhatsAppUrl, openWhatsApp } from "@/lib/whatsapp";
@@ -53,14 +52,6 @@ const emptyCustomer: CheckoutCustomer = {
   reference: "",
 };
 
-function sanitizeCustomer(saved: CheckoutCustomer | null): CheckoutCustomer {
-  if (!saved) return emptyCustomer;
-  const validPayment = paymentOptions.some((option) => option.id === saved.payment)
-    ? saved.payment
-    : "pix";
-  return { ...emptyCustomer, ...saved, payment: validPayment };
-}
-
 function validate(customer: CheckoutCustomer): CheckoutErrors {
   const errors: CheckoutErrors = {};
   if (customer.name.trim().length < 2) errors.name = "Informe seu nome.";
@@ -81,9 +72,8 @@ function formatCep(value: string): string {
 
 export function CheckoutModal({ onClose }: CheckoutModalProps) {
   const { items, gifts, summary, itemCount, clearCart } = useCart();
-  const [customer, setCustomer] = useState<CheckoutCustomer>(() =>
-    sanitizeCustomer(loadCustomer()),
-  );
+  // Fonte dos dados do cliente: SEMPRE o Supabase (não usamos localStorage).
+  const [customer, setCustomer] = useState<CheckoutCustomer>(emptyCustomer);
   const [errors, setErrors] = useState<CheckoutErrors>({});
   const [sent, setSent] = useState(false);
   const [sentUrl, setSentUrl] = useState<string | null>(null);
@@ -197,15 +187,15 @@ export function CheckoutModal({ onClose }: CheckoutModalProps) {
     if (isSupabaseConfigured) {
       try {
         await saveCustomerProfile(customer);
-      } catch {
-        /* Salvar o cadastro não deve impedir o pedido. */
+      } catch (error) {
+        // Não bloqueia o pedido; registra para diagnóstico.
+        console.warn("[checkout] falha ao salvar o cadastro:", error);
       }
     }
 
     // 1) Monta a mensagem com o carrinho ainda cheio.
     const message = buildOrderMessage({ items, gifts, summary, customer });
     const url = buildWhatsAppUrl(WHATSAPP_NUMBER, message);
-    saveCustomer(customer);
     // 2) Abre o WhatsApp...
     openWhatsApp(WHATSAPP_NUMBER, message);
     // 3) ...e só então limpa o carrinho (estado + localStorage).

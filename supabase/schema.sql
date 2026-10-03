@@ -50,6 +50,27 @@ end $$;
 alter table public.customers enable row level security;
 
 -- ---------------------------------------------------------------------
+-- Normaliza o telefone para o formato internacional (só dígitos, com 55).
+-- Aceita "(11) 99999-9999", "11999999999", "+5511999999999", "011 ...".
+-- ---------------------------------------------------------------------
+create or replace function public.normalize_phone(p text)
+returns text
+language sql
+immutable
+as $$
+  with d as (
+    select regexp_replace(regexp_replace(coalesce(p, ''), '\D', '', 'g'), '^0+', '') as v
+  )
+  select case
+    when v = '' then ''
+    when left(v, 2) = '55' and length(v) >= 12 then v
+    when length(v) in (10, 11) then '55' || v
+    else v
+  end
+  from d;
+$$;
+
+-- ---------------------------------------------------------------------
 -- Buscar cadastro pelo telefone (retorna 1 cliente ou nada).
 -- ---------------------------------------------------------------------
 create or replace function public.get_customer_by_phone(p_phone text)
@@ -60,7 +81,7 @@ set search_path = public
 as $$
   select *
   from public.customers
-  where phone = regexp_replace(coalesce(p_phone, ''), '\D', '', 'g')
+  where phone = public.normalize_phone(p_phone)
   limit 1;
 $$;
 
@@ -84,7 +105,7 @@ security definer
 set search_path = public
 as $$
 declare
-  v_phone text := regexp_replace(coalesce(p_phone, ''), '\D', '', 'g');
+  v_phone text := public.normalize_phone(p_phone);
   v_row public.customers;
 begin
   -- Não cria cadastro sem telefone.

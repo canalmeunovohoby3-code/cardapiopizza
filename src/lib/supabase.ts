@@ -25,6 +25,14 @@ const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
 export const isSupabaseConfigured = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 
+// Ajuda a diagnosticar no site publicado: se as chaves não estiverem no build,
+// o cadastro por telefone fica desativado (aparece este aviso no console).
+if (!isSupabaseConfigured) {
+  console.warn(
+    "[supabase] NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY ausentes neste build: cadastro por telefone desativado.",
+  );
+}
+
 let client: SupabaseClient | null = null;
 
 export function getSupabaseClient(): SupabaseClient | null {

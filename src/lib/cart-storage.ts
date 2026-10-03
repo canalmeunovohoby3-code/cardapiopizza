@@ -1,7 +1,6 @@
-import type { CartItem, CheckoutCustomer } from "@/types";
+import type { CartItem } from "@/types";
 
 const CART_KEY = "pizzaria.cart.v1";
-const CUSTOMER_KEY = "pizzaria.customer.v1";
 
 function isBrowser(): boolean {
   return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
@@ -45,26 +44,4 @@ function isValidCartItem(value: unknown): value is CartItem {
     return typeof item.productId === "string" && typeof item.name === "string";
   }
   return false;
-}
-
-export function loadCustomer(): CheckoutCustomer | null {
-  if (!isBrowser()) return null;
-  try {
-    const raw = window.localStorage.getItem(CUSTOMER_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object") return null;
-    return parsed as CheckoutCustomer;
-  } catch {
-    return null;
-  }
-}
-
-export function saveCustomer(customer: CheckoutCustomer): void {
-  if (!isBrowser()) return;
-  try {
-    window.localStorage.setItem(CUSTOMER_KEY, JSON.stringify(customer));
-  } catch {
-    /* ignora falha de armazenamento */
-  }
 }

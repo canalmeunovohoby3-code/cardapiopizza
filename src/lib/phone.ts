@@ -3,24 +3,31 @@ export function digitsOnly(value: string): string {
 }
 
 /**
- * Converte um telefone brasileiro para o formato E.164 aceito pelo
- * Supabase Auth. Ex.: "(45) 99999-9999" -> "+5545999999999".
+ * Converte um telefone brasileiro para o formato internacional (E.164)
+ * SEMPRE com o código do país, para que qualquer formato digitado vire
+ * o mesmo valor. Ex.:
+ *   "(11) 99999-9999"  -> "+5511999999999"
+ *   "11999999999"      -> "+5511999999999"
+ *   "+55 11 99999-9999"-> "+5511999999999"
+ *   "011 99999-9999"   -> "+5511999999999"
  */
 export function toE164(value: string): string {
-  let digits = digitsOnly(value);
+  // Remove não-dígitos e zeros iniciais (ex.: "011 ...").
+  let digits = digitsOnly(value).replace(/^0+/, "");
 
-  if (digits.startsWith("55") && digits.length >= 12) {
-    // já veio com DDI
-  } else if (digits.length === 10 || digits.length === 11) {
-    digits = `55${digits}`;
+  // Se ainda não tem o DDI 55, adiciona (DDD + 8/9 dígitos).
+  if (!(digits.startsWith("55") && digits.length >= 12)) {
+    if (digits.length === 10 || digits.length === 11) {
+      digits = `55${digits}`;
+    }
   }
 
   return `+${digits}`;
 }
 
-/** Valida um telefone brasileiro (DDD + 8 ou 9 dígitos). */
+/** Valida um telefone brasileiro (DDD + 8 ou 9 dígitos), em qualquer formato. */
 export function isValidBrazilianPhone(value: string): boolean {
-  let digits = digitsOnly(value);
+  let digits = digitsOnly(value).replace(/^0+/, "");
   if (digits.startsWith("55") && digits.length >= 12) {
     digits = digits.slice(2);
   }
@@ -29,7 +36,7 @@ export function isValidBrazilianPhone(value: string): boolean {
 
 /** Máscara visual: (45) 99999-9999 */
 export function formatPhone(value: string): string {
-  let digits = digitsOnly(value);
+  let digits = digitsOnly(value).replace(/^0+/, "");
   if (digits.startsWith("55") && digits.length >= 12) {
     digits = digits.slice(2);
   }
