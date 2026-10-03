@@ -75,4 +75,10 @@ export const productImages: Record<string, GeneratedImage> = {
   }
 };
 
-export const drinkImages: Record<string, GeneratedImage> = {};
+export const drinkImages: Record<string, GeneratedImage> = {
+  "coca-2l": {
+    "src": "/images/products/drinks/drink-coca-2l-81c5a6ed.webp",
+    "width": 447,
+    "height": 447
+  }
+};
