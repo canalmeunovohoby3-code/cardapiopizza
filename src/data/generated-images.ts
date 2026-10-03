@@ -80,5 +80,10 @@ export const drinkImages: Record<string, GeneratedImage> = {
     "src": "/images/products/drinks/drink-coca-2l-81c5a6ed.webp",
     "width": 447,
     "height": 447
+  },
+  "coca-zero-2l": {
+    "src": "/images/products/drinks/drink-coca-zero-2l-d2a5fd24.webp",
+    "width": 1000,
+    "height": 1000
   }
 };
