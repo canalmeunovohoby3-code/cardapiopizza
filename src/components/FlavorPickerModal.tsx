@@ -22,6 +22,11 @@ import type { EdgeId, FlavorCategory, PizzaSizeId } from "@/types";
 interface FlavorPickerModalProps {
   open: boolean;
   category: FlavorCategory;
+  /** "pizza" (padrão) ou "combo" (pizza grande com sabor escolhido, preço fixo). */
+  mode?: "pizza" | "combo";
+  comboName?: string;
+  comboIncludes?: string[];
+  comboPrice?: number;
   initialSizeId: PizzaSizeId;
   initialFlavorIds?: string[];
   initialEdgeId?: EdgeId;
@@ -40,6 +45,10 @@ interface FlavorPickerModalProps {
 export function FlavorPickerModal({
   open,
   category,
+  mode = "pizza",
+  comboName,
+  comboIncludes = [],
+  comboPrice,
   initialSizeId,
   initialFlavorIds = [],
   initialEdgeId = "sem",
@@ -49,6 +58,7 @@ export function FlavorPickerModal({
   onClose,
   onConfirm,
 }: FlavorPickerModalProps) {
+  const isCombo = mode === "combo";
   const flavors = category === "salgada" ? saltyFlavors : sweetFlavors;
 
   const [sizeId, setSizeId] = useState<PizzaSizeId>(initialSizeId);
@@ -58,10 +68,13 @@ export function FlavorPickerModal({
   const [warning, setWarning] = useState<string | null>(null);
   const [shakeKey, setShakeKey] = useState(0);
 
-  const size = pizzaSizeById[sizeId];
-  const maxFlavors = size.maxFlavors;
+  const effectiveSizeId: PizzaSizeId = isCombo ? "grande" : sizeId;
+  const size = pizzaSizeById[effectiveSizeId];
+  const maxFlavors = isCombo ? 3 : size.maxFlavors;
 
-  const unitPrice = size.price + edgeById[edgeId].price;
+  const unitPrice = isCombo
+    ? comboPrice ?? size.price
+    : size.price + edgeById[edgeId].price;
   const total = unitPrice * quantity;
   const selectedNames = flavorIds
     .map((id) => flavors.find((flavor) => flavor.id === id)?.name)
@@ -107,17 +120,24 @@ export function FlavorPickerModal({
     <Modal
       open={open}
       onClose={onClose}
-      ariaLabel={editing ? "Editar pizza" : "Montar pizza"}
+      ariaLabel={isCombo ? "Montar combo" : editing ? "Editar pizza" : "Montar pizza"}
       maxWidthClass="sm:max-w-lg"
     >
       <header className="flex items-start justify-between gap-3 border-b border-line bg-white px-4 py-3.5">
         <div className="min-w-0">
           <h2 className="font-display text-lg font-extrabold text-ink">
-            {editing ? "Editar pizza" : "Monte sua pizza"}
+            {isCombo
+              ? comboName ?? "Monte seu combo"
+              : editing
+                ? "Editar pizza"
+                : "Monte sua pizza"}
           </h2>
           <p className="mt-0.5 text-xs text-ink-soft">
-            {size.name} · {size.slices} pedaços · até {maxFlavors}{" "}
-            {maxFlavors > 1 ? "sabores" : "sabor"}
+            {isCombo
+              ? `Pizza grande 35 cm · até ${maxFlavors} sabores`
+              : `${size.name} · ${size.slices} pedaços · até ${maxFlavors} ${
+                  maxFlavors > 1 ? "sabores" : "sabor"
+                }`}
           </p>
         </div>
         <button
@@ -131,8 +151,20 @@ export function FlavorPickerModal({
       </header>
 
       <div className="flex-1 space-y-5 overflow-y-auto px-4 py-4">
-        <div>
-          <p className="font-display text-sm font-bold text-ink">Escolha o tamanho</p>
+        {isCombo ? (
+          <div className="rounded-2xl bg-brand-yellow-soft p-3">
+            <p className="text-xs font-bold text-ink">Este combo inclui:</p>
+            <ul className="mt-1 space-y-0.5 text-xs text-ink-soft">
+              <li>• Pizza grande 35 cm (escolha o sabor abaixo)</li>
+              {comboIncludes.map((item) => (
+                <li key={item}>• {item}</li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <>
+            <div>
+              <p className="font-display text-sm font-bold text-ink">Escolha o tamanho</p>
           <div className="mt-2 grid grid-cols-2 gap-2">
             {pizzaSizes.map((option) => {
               const active = option.id === sizeId;
@@ -201,7 +233,9 @@ export function FlavorPickerModal({
               );
             })}
           </div>
-        </div>
+            </div>
+          </>
+        )}
 
         <div>
           <div className="flex items-center justify-between gap-3">
@@ -288,11 +322,13 @@ export function FlavorPickerModal({
 
       <footer className="border-t border-line bg-white px-4 pt-3 pb-safe">
         <p className="mb-2 truncate text-xs text-ink-soft">
-          <span className="font-semibold text-ink">Sabores: </span>
+          <span className="font-semibold text-ink">
+            {isCombo ? "Sabores da pizza: " : "Sabores: "}
+          </span>
           {selectedNames.length > 0 ? selectedNames.join(" + ") : "nenhum selecionado"}
         </p>
 
-        {isPromoActive && sizeId === "grande" ? (
+        {isPromoActive && !isCombo && sizeId === "grande" ? (
           <p className="mb-2 inline-flex items-center gap-1.5 rounded-xl bg-brand-yellow-soft px-3 py-1.5 text-[11px] font-bold text-ink">
             <GiftIcon className="h-3.5 w-3.5" />
             Esta pizza ganha {weekdayGiftPromotion.gift.name} grátis
@@ -307,7 +343,14 @@ export function FlavorPickerModal({
         <button
           type="button"
           disabled={!canConfirm}
-          onClick={() => onConfirm({ sizeId, flavorIds, edgeId, quantity })}
+          onClick={() =>
+            onConfirm({
+              sizeId: effectiveSizeId,
+              flavorIds,
+              edgeId: isCombo ? "sem" : edgeId,
+              quantity,
+            })
+          }
           className={cn(
             "mt-3 h-12 w-full rounded-full px-4 font-display text-sm font-bold text-white transition active:scale-[0.98]",
             canConfirm ? "bg-brand-green" : "cursor-not-allowed bg-ink-soft/40",

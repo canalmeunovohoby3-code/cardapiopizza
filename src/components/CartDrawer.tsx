@@ -6,12 +6,12 @@ import { CartItemRow } from "@/components/CartItemRow";
 import { CartIcon, CloseIcon, GiftIcon } from "@/components/Icons";
 import { useCart } from "@/context/CartContext";
 import { formatBRL } from "@/lib/format";
-import type { PizzaCartItem } from "@/types";
+import type { CartItem } from "@/types";
 
 interface CartDrawerProps {
   open: boolean;
   onClose: () => void;
-  onEdit: (item: PizzaCartItem) => void;
+  onEdit: (item: CartItem) => void;
   onCheckout: () => void;
 }
 

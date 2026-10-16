@@ -56,9 +56,22 @@ export interface DrinkProduct {
 }
 
 export interface NavigationCategory {
-  id: "pizzas-salgadas" | "pizzas-doces" | "refrigerantes" | "bordas";
+  id: "combos" | "pizzas-salgadas" | "pizzas-doces" | "refrigerantes" | "bordas";
   label: string;
   emoji: string;
+}
+
+/** Combo com preço fixo. */
+export interface ComboProduct {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  emoji: string;
+  /** Itens fixos incluídos (além da pizza grande escolhida pelo cliente). */
+  includes: string[];
+  image?: string;
+  imageAspect?: number;
 }
 
 export interface PizzaCartItem {
@@ -81,7 +94,20 @@ export interface DrinkCartItem {
   unitPrice: number;
 }
 
-export type CartItem = PizzaCartItem | DrinkCartItem;
+export interface ComboCartItem {
+  uid: string;
+  kind: "combo";
+  comboId: string;
+  name: string;
+  /** Sabores escolhidos para a pizza grande do combo. */
+  flavorIds: string[];
+  /** Itens fixos do combo (ex.: "Brotinho de Chocolate", "Coca-Cola 2L"). */
+  includes: string[];
+  quantity: number;
+  unitPrice: number;
+}
+
+export type CartItem = PizzaCartItem | DrinkCartItem | ComboCartItem;
 
 export interface PromoGift {
   id: string;

@@ -1,5 +1,6 @@
 import { drinkImages, productImages } from "@/data/generated-images";
 import type {
+  ComboProduct,
   DrinkProduct,
   Edge,
   Flavor,
@@ -126,6 +127,33 @@ const saltyFlavorsRaw: Flavor[] = [
     emoji: "🍖",
     tone: "green",
   },
+  {
+    id: "strogonoff-carne",
+    name: "Strogonoff de Carne",
+    description:
+      "Strogonoff de carne, molho de tomate, queijo mussarela, milho, batata palha e orégano.",
+    category: "salgada",
+    emoji: "🥩",
+    tone: "red",
+  },
+  {
+    id: "strogonoff-frango",
+    name: "Strogonoff de Frango",
+    description:
+      "Strogonoff de frango, molho de tomate, queijo mussarela, milho, batata palha e orégano.",
+    category: "salgada",
+    emoji: "🍗",
+    tone: "yellow",
+  },
+  {
+    id: "bacon-milho",
+    name: "Bacon com Milho",
+    description:
+      "Molho de tomate, bacon em cubos, milho, queijo mussarela, orégano e azeitona.",
+    category: "salgada",
+    emoji: "🥓",
+    tone: "yellow",
+  },
 ];
 
 const sweetFlavorsRaw: Flavor[] = [
@@ -138,12 +166,12 @@ const sweetFlavorsRaw: Flavor[] = [
     tone: "red",
   },
   {
-    id: "prestigio",
-    name: "Prestígio",
-    description: "Massa tradicional, creme de leite, chocolate preto e coco ralado.",
+    id: "uva-chocolate",
+    name: "Uva com Chocolate",
+    description: "Massa tradicional, creme de leite, uva verde e chocolate.",
     category: "doce",
-    emoji: "🥥",
-    tone: "yellow",
+    emoji: "🍇",
+    tone: "green",
   },
   {
     id: "dois-amores",
@@ -193,7 +221,25 @@ export const sweetFlavors = withImages(sweetFlavorsRaw, productImages);
 export const drinks2L = withImages(drinks2LRaw, drinkImages);
 export const drinksLata = withImages(drinksLataRaw, drinkImages);
 
+/** Combos com preço fixo (a pizza grande tem sabor escolhido pelo cliente). */
+export const combos: ComboProduct[] = [
+  {
+    id: "combo-familia",
+    name: "Combo Família",
+    description:
+      "Pizza grande 35 cm (12 pedaços) + Brotinho de Chocolate + Coca-Cola 2L.",
+    price: 89.9,
+    emoji: "🎉",
+    includes: ["Brotinho de Chocolate", "Coca-Cola 2L"],
+  },
+];
+
+export const comboById: Record<string, ComboProduct> = Object.fromEntries(
+  combos.map((combo) => [combo.id, combo]),
+);
+
 export const navigationCategories: NavigationCategory[] = [
+  { id: "combos", label: "Combos", emoji: "🎉" },
   { id: "pizzas-salgadas", label: "Pizzas Salgadas", emoji: "🍕" },
   { id: "pizzas-doces", label: "Pizzas Doces", emoji: "🍫" },
   { id: "refrigerantes", label: "Refrigerantes", emoji: "🥤" },

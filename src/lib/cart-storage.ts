@@ -43,5 +43,13 @@ function isValidCartItem(value: unknown): value is CartItem {
   if (item.kind === "drink") {
     return typeof item.productId === "string" && typeof item.name === "string";
   }
+  if (item.kind === "combo") {
+    return (
+      typeof item.comboId === "string" &&
+      typeof item.name === "string" &&
+      Array.isArray(item.flavorIds) &&
+      Array.isArray(item.includes)
+    );
+  }
   return false;
 }

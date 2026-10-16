@@ -13,7 +13,13 @@ import {
 
 import { pizzeria } from "@/data/config";
 import type { DrinkProduct, EdgeId, FlavorCategory, PizzaSizeId } from "@/types";
-import type { CartItem, OrderSummary, PizzaCartItem, PromoGift } from "@/types";
+import type {
+  CartItem,
+  ComboCartItem,
+  OrderSummary,
+  PizzaCartItem,
+  PromoGift,
+} from "@/types";
 import { createUid } from "@/lib/id";
 import { getOrderSummary, getPizzaUnitPrice, getItemCount } from "@/lib/pricing";
 import { getPromoGifts, isPromotionDay } from "@/lib/promotions";
@@ -34,6 +40,15 @@ interface EditPizzaInput {
   quantity: number;
 }
 
+interface AddComboInput {
+  comboId: string;
+  name: string;
+  price: number;
+  includes: string[];
+  flavorIds: string[];
+  quantity: number;
+}
+
 interface CartContextValue {
   items: CartItem[];
   hydrated: boolean;
@@ -44,6 +59,8 @@ interface CartContextValue {
   addPizza: (input: AddPizzaInput) => void;
   editPizza: (uid: string, input: EditPizzaInput) => void;
   addDrink: (drink: DrinkProduct, quantity?: number) => void;
+  addCombo: (input: AddComboInput) => void;
+  editCombo: (uid: string, input: { flavorIds: string[]; quantity: number }) => void;
   updateQuantity: (uid: string, quantity: number) => void;
   removeItem: (uid: string) => void;
   clearCart: () => void;
@@ -167,6 +184,52 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const addCombo = useCallback((input: AddComboInput) => {
+    const quantity = Math.max(1, Math.round(input.quantity));
+    setItems((prev) => {
+      const wanted = flavorKey(input.flavorIds);
+      const index = prev.findIndex(
+        (item) =>
+          item.kind === "combo" &&
+          item.comboId === input.comboId &&
+          flavorKey(item.flavorIds) === wanted,
+      );
+
+      if (index >= 0) {
+        const next = [...prev];
+        const existing = next[index] as ComboCartItem;
+        next[index] = { ...existing, quantity: existing.quantity + quantity };
+        return next;
+      }
+
+      const item: ComboCartItem = {
+        uid: createUid(),
+        kind: "combo",
+        comboId: input.comboId,
+        name: input.name,
+        flavorIds: input.flavorIds,
+        includes: input.includes,
+        quantity,
+        unitPrice: input.price,
+      };
+      return [...prev, item];
+    });
+  }, []);
+
+  const editCombo = useCallback(
+    (uid: string, input: { flavorIds: string[]; quantity: number }) => {
+      const quantity = Math.max(1, Math.round(input.quantity));
+      setItems((prev) =>
+        prev.map((item) =>
+          item.uid === uid && item.kind === "combo"
+            ? { ...item, flavorIds: input.flavorIds, quantity }
+            : item,
+        ),
+      );
+    },
+    [],
+  );
+
   const updateQuantity = useCallback((uid: string, quantity: number) => {
     setItems((prev) =>
       prev
@@ -206,6 +269,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       addPizza,
       editPizza,
       addDrink,
+      addCombo,
+      editCombo,
       updateQuantity,
       removeItem,
       clearCart,
@@ -220,6 +285,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       addPizza,
       editPizza,
       addDrink,
+      addCombo,
+      editCombo,
       updateQuantity,
       removeItem,
       clearCart,

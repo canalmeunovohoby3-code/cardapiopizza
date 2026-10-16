@@ -34,14 +34,15 @@ export function buildOrderMessage({
     const described = describeItem(item);
     lines.push(`${item.quantity}x ${described.title} — ${formatBRL(described.baseTotal)}`);
 
-    if (item.kind === "pizza") {
+    if (described.flavorLine && described.flavorLabel) {
+      lines.push(`${described.flavorLabel}: ${described.flavorLine}`);
+    }
+    if (item.kind === "pizza" && described.edgeLine) {
       const edge = edgeById[item.edgeId];
-      if (described.flavorLine) {
-        lines.push(`Sabores: ${described.flavorLine}`);
-      }
-      if (described.edgeLine) {
-        lines.push(`Borda: ${edge.shortName} — ${formatBRL(edge.price * item.quantity)}`);
-      }
+      lines.push(`Borda: ${edge.shortName} — ${formatBRL(edge.price * item.quantity)}`);
+    }
+    if (described.extraLines.length > 0) {
+      lines.push(`Inclui: ${described.extraLines.join(" + ")}`);
     }
     lines.push("");
   });

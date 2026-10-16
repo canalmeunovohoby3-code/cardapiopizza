@@ -58,11 +58,6 @@ export const productImages: Record<string, GeneratedImage> = {
     "width": 1174,
     "height": 1174
   },
-  "prestigio": {
-    "src": "/images/products/pizzas/pizza-prestigio-39003300.webp",
-    "width": 501,
-    "height": 501
-  },
   "quatro-queijos": {
     "src": "/images/products/pizzas/pizza-quatro-queijos-ea23c0fc.webp",
     "width": 1200,

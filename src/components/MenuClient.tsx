@@ -6,6 +6,7 @@ import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
 import { CategoryNav } from "@/components/CategoryNav";
 import { PromoBanner } from "@/components/PromoBanner";
+import { CombosSection } from "@/components/CombosSection";
 import { PizzaSection } from "@/components/PizzaSection";
 import { DrinksSection } from "@/components/DrinksSection";
 import { EdgesSection } from "@/components/EdgesSection";
@@ -17,25 +18,28 @@ import { CheckoutModal } from "@/components/CheckoutModal";
 import { FlavorPickerModal } from "@/components/FlavorPickerModal";
 import { Toast, type ToastData } from "@/components/Toast";
 import { useCart } from "@/context/CartContext";
-import { pizzaSectionNote, saltyFlavors, sweetFlavors } from "@/data/menu";
+import { comboById, pizzaSectionNote, saltyFlavors, sweetFlavors } from "@/data/menu";
 import { weekdayGiftPromotion } from "@/data/promotions";
 import type {
+  CartItem,
+  ComboProduct,
   DrinkProduct,
   EdgeId,
   FlavorCategory,
   NavigationCategory,
-  PizzaCartItem,
   PizzaSizeId,
 } from "@/types";
 
 interface FlavorModalState {
   sessionId: number;
+  mode: "pizza" | "combo";
   category: FlavorCategory;
   sizeId: PizzaSizeId;
   flavorIds: string[];
   edgeId: EdgeId;
   quantity: number;
   editingUid?: string;
+  comboId?: string;
 }
 
 export function MenuClient() {
@@ -48,6 +52,8 @@ export function MenuClient() {
     addPizza,
     editPizza,
     addDrink,
+    addCombo,
+    editCombo,
   } = useCart();
 
   const [activeCategory, setActiveCategory] =
@@ -66,6 +72,7 @@ export function MenuClient() {
 
   useEffect(() => {
     const ids: NavigationCategory["id"][] = [
+      "combos",
       "pizzas-salgadas",
       "pizzas-doces",
       "refrigerantes",
@@ -103,6 +110,7 @@ export function MenuClient() {
     (category: FlavorCategory, sizeId: PizzaSizeId, flavorId?: string) => {
       setModal({
         sessionId: Date.now(),
+        mode: "pizza",
         category,
         sizeId,
         flavorIds: flavorId ? [flavorId] : [],
@@ -113,6 +121,19 @@ export function MenuClient() {
     [],
   );
 
+  const openComboModal = useCallback((combo: ComboProduct) => {
+    setModal({
+      sessionId: Date.now(),
+      mode: "combo",
+      comboId: combo.id,
+      category: "salgada",
+      sizeId: "grande",
+      flavorIds: [],
+      edgeId: "sem",
+      quantity: 1,
+    });
+  }, []);
+
   const handleConfirmFlavor = useCallback(
     (input: {
       sizeId: PizzaSizeId;
@@ -121,6 +142,35 @@ export function MenuClient() {
       quantity: number;
     }) => {
       if (!modal) return;
+
+      if (modal.mode === "combo" && modal.comboId) {
+        const combo = comboById[modal.comboId];
+        if (!combo) {
+          setModal(null);
+          return;
+        }
+        if (modal.editingUid) {
+          editCombo(modal.editingUid, {
+            flavorIds: input.flavorIds,
+            quantity: input.quantity,
+          });
+          setModal(null);
+          setCartOpen(true);
+          showToast("Combo atualizado", "success");
+          return;
+        }
+        addCombo({
+          comboId: combo.id,
+          name: combo.name,
+          price: combo.price,
+          includes: combo.includes,
+          flavorIds: input.flavorIds,
+          quantity: input.quantity,
+        });
+        setModal(null);
+        showToast("Combo adicionado ao carrinho", "success");
+        return;
+      }
 
       if (modal.editingUid) {
         editPizza(modal.editingUid, input);
@@ -140,7 +190,7 @@ export function MenuClient() {
         earnsGift ? "promo" : "success",
       );
     },
-    [modal, editPizza, addPizza, isPromoActive, showToast],
+    [modal, editPizza, editCombo, addPizza, addCombo, isPromoActive, showToast],
   );
 
   const handleAddDrink = useCallback(
@@ -151,17 +201,36 @@ export function MenuClient() {
     [addDrink, showToast],
   );
 
-  const handleEditItem = useCallback((item: PizzaCartItem) => {
+  const handleEditItem = useCallback((item: CartItem) => {
     setCartOpen(false);
-    setModal({
-      sessionId: Date.now(),
-      category: item.category,
-      sizeId: item.sizeId,
-      flavorIds: item.flavorIds,
-      edgeId: item.edgeId,
-      quantity: item.quantity,
-      editingUid: item.uid,
-    });
+
+    if (item.kind === "combo") {
+      setModal({
+        sessionId: Date.now(),
+        mode: "combo",
+        comboId: item.comboId,
+        category: "salgada",
+        sizeId: "grande",
+        flavorIds: item.flavorIds,
+        edgeId: "sem",
+        quantity: item.quantity,
+        editingUid: item.uid,
+      });
+      return;
+    }
+
+    if (item.kind === "pizza") {
+      setModal({
+        sessionId: Date.now(),
+        mode: "pizza",
+        category: item.category,
+        sizeId: item.sizeId,
+        flavorIds: item.flavorIds,
+        edgeId: item.edgeId,
+        quantity: item.quantity,
+        editingUid: item.uid,
+      });
+    }
   }, []);
 
   const showCartBar = hydrated && itemCount > 0;
@@ -177,6 +246,7 @@ export function MenuClient() {
         {isPromoActive ? <PromoBanner /> : null}
 
         <div id="cardapio" className="scroll-mt-36">
+          <CombosSection onSelect={openComboModal} />
           <PizzaSection
             id="pizzas-salgadas"
             title="Pizzas Salgadas"
@@ -222,6 +292,10 @@ export function MenuClient() {
         <FlavorPickerModal
           key={modal.sessionId}
           open
+          mode={modal.mode}
+          comboName={modal.comboId ? comboById[modal.comboId]?.name : undefined}
+          comboIncludes={modal.comboId ? comboById[modal.comboId]?.includes : undefined}
+          comboPrice={modal.comboId ? comboById[modal.comboId]?.price : undefined}
           category={modal.category}
           initialSizeId={modal.sizeId}
           initialFlavorIds={modal.flavorIds}

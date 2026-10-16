@@ -30,7 +30,10 @@ export type ToppingType =
   | "costela"
   | "chocoHalf"
   | "whiteHalf"
-  | "coconut";
+  | "coconut"
+  | "corn"
+  | "potatoStick"
+  | "grape";
 
 export interface ToppingLayer {
   type: ToppingType;
@@ -88,10 +91,36 @@ export const pizzaToppingsById: Record<string, ToppingLayer[]> = {
     { type: "olive", count: 3 },
   ],
   chocolate: [{ type: "chocoHalf", count: 1 }, { type: "coconut", count: 5 }],
-  prestigio: [{ type: "chocoHalf", count: 1 }, { type: "coconut", count: 16 }],
   "dois-amores": [
     { type: "chocoHalf", count: 1 },
     { type: "whiteHalf", count: 1 },
+  ],
+  "uva-chocolate": [
+    { type: "chocoHalf", count: 1 },
+    { type: "grape", count: 8 },
+  ],
+  "strogonoff-carne": [
+    { type: "costela", count: 6 },
+    { type: "corn", count: 8 },
+    { type: "potatoStick", count: 7 },
+    { type: "olive", count: 3 },
+  ],
+  "strogonoff-frango": [
+    { type: "chicken", count: 6 },
+    { type: "corn", count: 8 },
+    { type: "potatoStick", count: 7 },
+    { type: "olive", count: 3 },
+  ],
+  "bacon-milho": [
+    { type: "bacon", count: 8 },
+    { type: "corn", count: 8 },
+    { type: "olive", count: 3 },
+  ],
+  combo: [
+    { type: "pepperoni", count: 5 },
+    { type: "cheeseWedge", count: 5 },
+    { type: "onion", count: 4 },
+    { type: "olive", count: 3 },
   ],
   default: [{ type: "shred", count: 10 }, { type: "olive", count: 3 }],
 };
@@ -302,6 +331,28 @@ function renderTopping(
           <path d="M 24 -22 Q 62 8 100 -22" />
           <path d="M 24 22 Q 62 52 100 22" />
           <path d="M 16 -58 Q 46 -28 76 -58" />
+        </g>
+      );
+    case "corn":
+      return (
+        <g key={key} transform={transform}>
+          <ellipse rx="4.4" ry="3.4" fill="#F2C231" />
+          <ellipse rx="4.4" ry="3.4" fill={shadeFill} />
+        </g>
+      );
+    case "potatoStick":
+      return (
+        <g key={key} transform={transform}>
+          <rect x="-11" y="-2.6" width="22" height="3.6" rx="1.8" fill="#F0C24A" />
+          <rect x="-9" y="2.4" width="18" height="3.2" rx="1.6" fill="#E5B235" />
+        </g>
+      );
+    case "grape":
+      return (
+        <g key={key} transform={transform}>
+          <circle r="6" fill="#8FC24B" />
+          <circle r="6" fill={shadeFill} />
+          <circle cx="-2" cy="-2" r="1.6" fill="rgba(255,255,255,0.55)" />
         </g>
       );
     case "coconut":
