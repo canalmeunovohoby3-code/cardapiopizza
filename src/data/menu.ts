@@ -222,7 +222,7 @@ export const drinks2L = withImages(drinks2LRaw, drinkImages);
 export const drinksLata = withImages(drinksLataRaw, drinkImages);
 
 /** Combos com preço fixo (a pizza grande tem sabor escolhido pelo cliente). */
-export const combos: ComboProduct[] = [
+const combosRaw: ComboProduct[] = [
   {
     id: "combo-familia",
     name: "Combo Família",
@@ -233,6 +233,21 @@ export const combos: ComboProduct[] = [
     includes: ["Brotinho de Chocolate", "Coca-Cola 2L"],
   },
 ];
+
+/**
+ * Anexa a foto do combo (arquivo `image-sources/pizzas/combo.*`), quando existir.
+ */
+function withComboImage(combo: ComboProduct): ComboProduct {
+  const image = productImages[combo.id] ?? productImages.combo;
+  if (!image) return combo;
+  return {
+    ...combo,
+    image: image.src,
+    imageAspect: image.width / image.height,
+  };
+}
+
+export const combos: ComboProduct[] = combosRaw.map(withComboImage);
 
 export const comboById: Record<string, ComboProduct> = Object.fromEntries(
   combos.map((combo) => [combo.id, combo]),

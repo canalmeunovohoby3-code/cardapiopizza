@@ -28,6 +28,11 @@ export const productImages: Record<string, GeneratedImage> = {
     "width": 547,
     "height": 547
   },
+  "combo": {
+    "src": "/images/products/pizzas/pizza-combo-5562115f.webp",
+    "width": 1200,
+    "height": 1200
+  },
   "costela": {
     "src": "/images/products/pizzas/pizza-costela-031579ce.webp",
     "width": 1200,
