@@ -68,6 +68,11 @@ export const productImages: Record<string, GeneratedImage> = {
     "width": 1200,
     "height": 1200
   },
+  "strogonoff-carne": {
+    "src": "/images/products/pizzas/pizza-strogonoff-carne-0b731d2f.webp",
+    "width": 500,
+    "height": 500
+  },
   "tradicional": {
     "src": "/images/products/pizzas/pizza-tradicional-10011ac5.webp",
     "width": 1200,
