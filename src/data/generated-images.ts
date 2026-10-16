@@ -13,6 +13,11 @@ export interface GeneratedImage {
 }
 
 export const productImages: Record<string, GeneratedImage> = {
+  "bacon-milho": {
+    "src": "/images/products/pizzas/pizza-bacon-milho-781177a6.webp",
+    "width": 450,
+    "height": 450
+  },
   "calabresa": {
     "src": "/images/products/pizzas/pizza-calabresa-5871550c.webp",
     "width": 800,
@@ -82,6 +87,11 @@ export const productImages: Record<string, GeneratedImage> = {
     "src": "/images/products/pizzas/pizza-tradicional-10011ac5.webp",
     "width": 1200,
     "height": 1200
+  },
+  "uva-chocolate": {
+    "src": "/images/products/pizzas/pizza-uva-chocolate-d15c49df.webp",
+    "width": 1000,
+    "height": 1000
   }
 };
 
