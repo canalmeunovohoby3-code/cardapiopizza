@@ -199,13 +199,25 @@ export function CheckoutModal({ onClose }: CheckoutModalProps) {
     const url = buildWhatsAppUrl(WHATSAPP_NUMBER, message);
     // 2) Abre o WhatsApp...
     openWhatsApp(WHATSAPP_NUMBER, message);
-    // 2.1) Registra a conversão do WhatsApp (contact) no Meta Pixel.
-    trackMetaEvent("Contact", {
+
+    // 2.1) Marca a VENDA (Purchase) no Meta Pixel, com valor e itens do pedido.
+    // É esse evento que o Meta usa para atribuir a venda ao anúncio.
+    const contentIds = items.flatMap((item) =>
+      item.kind === "drink"
+        ? [item.productId]
+        : item.kind === "combo"
+          ? [item.comboId]
+          : item.flavorIds,
+    );
+    trackMetaEvent("Purchase", {
       content_name: "Pedido WhatsApp",
+      content_ids: contentIds,
+      content_type: "product",
       value: summary.total,
       currency: "BRL",
       num_items: itemCount,
     });
+
     // 3) ...e só então limpa o carrinho (estado + localStorage).
     clearCart();
     setSentUrl(url);
