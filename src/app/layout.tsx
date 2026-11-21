@@ -3,6 +3,7 @@ import { Baloo_2, Inter } from "next/font/google";
 
 import { pizzeria } from "@/data/config";
 import { CartProvider } from "@/context/CartContext";
+import { MetaPixel } from "@/components/MetaPixel";
 
 import "./globals.css";
 
@@ -40,6 +41,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${inter.variable} ${baloo.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-cream font-sans text-ink">
+        <MetaPixel />
         <CartProvider>{children}</CartProvider>
       </body>
     </html>

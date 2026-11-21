@@ -18,8 +18,17 @@ import { CheckoutModal } from "@/components/CheckoutModal";
 import { FlavorPickerModal } from "@/components/FlavorPickerModal";
 import { Toast, type ToastData } from "@/components/Toast";
 import { useCart } from "@/context/CartContext";
-import { comboById, pizzaSectionNote, saltyFlavors, sweetFlavors } from "@/data/menu";
+import {
+  comboById,
+  edgeById,
+  flavorsById,
+  pizzaSectionNote,
+  pizzaSizeById,
+  saltyFlavors,
+  sweetFlavors,
+} from "@/data/menu";
 import { weekdayGiftPromotion } from "@/data/promotions";
+import { trackMetaEvent } from "@/lib/meta-pixel";
 import type {
   CartItem,
   ComboProduct,
@@ -167,6 +176,14 @@ export function MenuClient() {
           flavorIds: input.flavorIds,
           quantity: input.quantity,
         });
+        trackMetaEvent("AddToCart", {
+          content_name: combo.name,
+          content_ids: [combo.id],
+          content_type: "product",
+          value: combo.price * input.quantity,
+          currency: "BRL",
+          num_items: input.quantity,
+        });
         setModal(null);
         showToast("Combo adicionado ao carrinho", "success");
         return;
@@ -182,6 +199,19 @@ export function MenuClient() {
 
       const earnsGift = isPromoActive && input.sizeId === "grande";
       addPizza({ category: modal.category, ...input });
+      const flavorNames = input.flavorIds
+        .map((id) => flavorsById[id]?.name)
+        .filter((name): name is string => Boolean(name));
+      trackMetaEvent("AddToCart", {
+        content_name: flavorNames.join(" + ") || "Pizza",
+        content_ids: input.flavorIds,
+        content_type: "product",
+        value:
+          (pizzaSizeById[input.sizeId].price + edgeById[input.edgeId].price) *
+          input.quantity,
+        currency: "BRL",
+        num_items: input.quantity,
+      });
       setModal(null);
       showToast(
         earnsGift
@@ -196,6 +226,14 @@ export function MenuClient() {
   const handleAddDrink = useCallback(
     (drink: DrinkProduct) => {
       addDrink(drink, 1);
+      trackMetaEvent("AddToCart", {
+        content_name: drink.name,
+        content_ids: [drink.id],
+        content_type: "product",
+        value: drink.price,
+        currency: "BRL",
+        num_items: 1,
+      });
       showToast(`${drink.shortName} adicionado`, "success");
     },
     [addDrink, showToast],
@@ -313,6 +351,11 @@ export function MenuClient() {
         onClose={() => setCartOpen(false)}
         onEdit={handleEditItem}
         onCheckout={() => {
+          trackMetaEvent("InitiateCheckout", {
+            value: summary.total,
+            currency: "BRL",
+            num_items: itemCount,
+          });
           setCartOpen(false);
           setCheckoutOpen(true);
         }}

@@ -14,6 +14,7 @@ import {
   saveCustomerProfile,
 } from "@/lib/customers";
 import { formatBRL } from "@/lib/format";
+import { trackMetaEvent } from "@/lib/meta-pixel";
 import { paymentLabels } from "@/lib/order";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { buildOrderMessage, buildWhatsAppUrl, openWhatsApp } from "@/lib/whatsapp";
@@ -198,6 +199,13 @@ export function CheckoutModal({ onClose }: CheckoutModalProps) {
     const url = buildWhatsAppUrl(WHATSAPP_NUMBER, message);
     // 2) Abre o WhatsApp...
     openWhatsApp(WHATSAPP_NUMBER, message);
+    // 2.1) Registra a conversão do WhatsApp (contact) no Meta Pixel.
+    trackMetaEvent("Contact", {
+      content_name: "Pedido WhatsApp",
+      value: summary.total,
+      currency: "BRL",
+      num_items: itemCount,
+    });
     // 3) ...e só então limpa o carrinho (estado + localStorage).
     clearCart();
     setSentUrl(url);
